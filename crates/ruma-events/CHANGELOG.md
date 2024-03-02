@@ -1,5 +1,10 @@
 # [unreleased]
 
+Bug fixes:
+
+- The `MembershipState::Invite` to `MembershipState::Knock` membership change
+  now returns `MembershipChange::Error`, due to a spec clarification
+
 Breaking changes:
 
 - The properties of `SecretStorageV1AesHmacSha2Properties` are now `Option`al.
@@ -22,6 +27,7 @@ Improvements:
 - Add unstable support for manually marking rooms as unread through [MSC2867](https://github.com/matrix-org/matrix-spec-proposals/pull/2867) 
   and the room account data `m.marked_unread` event (unstable type `com.famedly.marked_unread`)
 - Implement `From<JoinRule>` for `SpaceRoomJoinRule`
+- Add `filename` and `formatted` fields to media event contents to support media captions as per [MSC2530](https://github.com/matrix-org/matrix-spec-proposals/pull/2530)
 
 # 0.27.11
 
