@@ -27,13 +27,16 @@ js = ["dep:js-sys", "getrandom?/js", "uuid?/js"]
 rand = ["dep:rand", "dep:uuid"]
 unstable-exhaustive-types = []
 unstable-msc2870 = []
+unstable-msc3026 = []
 unstable-msc3930 = []
 unstable-msc3931 = []
 unstable-msc3932 = ["unstable-msc3931"]
 unstable-unspecified = []
 
 # Allow IDs to exceed 255 bytes.
-compat-arbitrary-length-ids = ["ruma-identifiers-validation/compat-arbitrary-length-ids"]
+compat-arbitrary-length-ids = [
+    "ruma-identifiers-validation/compat-arbitrary-length-ids",
+]
 
 # Don't validate the version part in `KeyId`.
 compat-key-id = ["ruma-identifiers-validation/compat-key-id"]
@@ -63,10 +66,17 @@ getrandom = { version = "0.2.6", optional = true }
 http = { workspace = true, optional = true }
 indexmap = { version = "2.0.0", features = ["serde"] }
 js_int = { workspace = true, features = ["serde"] }
-konst = { version = "0.3.5", default-features = false, features = ["cmp", "iter", "parsing"], optional = true }
+konst = { version = "0.3.5", default-features = false, features = [
+    "cmp",
+    "iter",
+    "parsing",
+], optional = true }
 percent-encoding = "2.1.0"
 rand = { version = "0.8.3", optional = true }
-regex = { version = "1.5.6", default-features = false, features = ["std", "perf"] }
+regex = { version = "1.5.6", default-features = false, features = [
+    "std",
+    "perf",
+] }
 ruma-identifiers-validation = { workspace = true }
 ruma-macros = { workspace = true }
 serde = { workspace = true }
