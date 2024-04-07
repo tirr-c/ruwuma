@@ -47,11 +47,13 @@ unstable-msc3488 = []
 unstable-msc3575 = []
 unstable-msc3814 = []
 unstable-msc3983 = []
+unstable-msc4121 = []
 
 [dependencies]
 as_variant = { workspace = true }
 assign = { workspace = true }
 bytes = "1.0.1"
+date_header = "1.0.5"
 http = { workspace = true }
 js_int = { workspace = true, features = ["serde"] }
 js_option = "0.1.1"
@@ -61,6 +63,8 @@ ruma-events = { workspace = true }
 serde = { workspace = true }
 serde_html_form = { workspace = true }
 serde_json = { workspace = true }
+thiserror = { workspace = true }
+web-time = { workspace = true }
 
 [dev-dependencies]
 assert_matches2 = { workspace = true }

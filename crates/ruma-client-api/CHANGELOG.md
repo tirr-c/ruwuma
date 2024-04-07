@@ -16,6 +16,9 @@ Breaking changes:
 - `Error` is now non-exhaustive.
 - `ErrorKind::Forbidden` is now a non-exhaustive struct variant that can be
   constructed with `ErrorKind::forbidden()`.
+- The `retry_after_ms` field of `ErrorKind::LimitExceeded` was renamed to
+  `retry_after` and is now an `Option<RetryAfter>`, to add support for the
+  Retry-After header, according to MSC4041 / Matrix 1.10 
 
 Improvements:
 
@@ -41,6 +44,7 @@ Improvements:
 - Add server support discovery endpoint, according to MSC1929 / Matrix 1.10
 - Add `dir` `Request` field on the `get_relating_events_with_rel_types` and
   `get_relating_events_with_rel_type_and_event_type` endpoints
+- Add unstable support for moderator server support discovery, according to MSC4121
 
 # 0.17.4
 
@@ -80,7 +84,7 @@ Breaking changes:
 
 Improvements:
 
-- Add convenience constructors for enabling lazy-loading in filters 
+- Add convenience constructors for enabling lazy-loading in filters
 - Add support for using an existing session to log in another (MSC3882 / Matrix 1.7)
 - Add support for media download redirects (MSC3860 / Matrix 1.7)
 - Stabilize support for asynchronous media uploads (MSC2246 / Matrix 1.7)
