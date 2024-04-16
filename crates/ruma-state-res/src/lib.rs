@@ -13,7 +13,7 @@ use ruma_events::{
     StateEventType, TimelineEventType,
 };
 use serde_json::from_str as from_json_str;
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, trace, warn};
 
 mod error;
 pub mod event_auth;
@@ -63,20 +63,20 @@ where
     E::Id: 'a,
     SetIter: Iterator<Item = &'a StateMap<E::Id>> + Clone,
 {
-    info!("State resolution starting");
+    debug!("State resolution starting");
 
     // Split non-conflicting and conflicting state
     let (clean, conflicting) = separate(state_sets.into_iter());
 
-    info!("non conflicting events: {}", clean.len());
+    debug!("non conflicting events: {}", clean.len());
     trace!("{clean:?}");
 
     if conflicting.is_empty() {
-        info!("no conflicting state found");
+        debug!("no conflicting state found");
         return Ok(clean);
     }
 
-    info!("conflicting events: {}", conflicting.len());
+    debug!("conflicting events: {}", conflicting.len());
     debug!("{conflicting:?}");
 
     // `all_conflicted` contains unique items
@@ -87,7 +87,7 @@ where
         .filter(|id| fetch_event(id.borrow()).is_some())
         .collect();
 
-    info!("full conflicted set: {}", all_conflicted.len());
+    debug!("full conflicted set: {}", all_conflicted.len());
     debug!("{all_conflicted:?}");
 
     // We used to check that all events are events from the correct room
@@ -229,7 +229,7 @@ fn reverse_topological_power_sort<E: Event>(
     let mut event_to_pl = HashMap::new();
     for event_id in graph.keys() {
         let pl = get_power_level_for_sender(event_id.borrow(), &fetch_event)?;
-        info!("{event_id} power level {pl}");
+        debug!("{event_id} power level {pl}");
 
         event_to_pl.insert(event_id.clone(), pl);
 
@@ -264,7 +264,7 @@ where
         event_id: &'a Id,
     }
 
-    info!("starting lexicographical topological sort");
+    debug!("starting lexicographical topological sort");
     // NOTE: an event that has no incoming edges happened most recently,
     // and an event that has no outgoing edges happened least recently.
 
@@ -343,7 +343,7 @@ fn get_power_level_for_sender<E: Event>(
     event_id: &EventId,
     fetch_event: impl Fn(&EventId) -> Option<E>,
 ) -> serde_json::Result<Int> {
-    info!("fetch event ({event_id}) senders power level");
+    debug!("fetch event ({event_id}) senders power level");
 
     let event = fetch_event(event_id);
     let mut pl = None;
@@ -387,7 +387,7 @@ fn iterative_auth_check<E: Event + Clone>(
     unconflicted_state: StateMap<E::Id>,
     fetch_event: impl Fn(&EventId) -> Option<E>,
 ) -> Result<StateMap<E::Id>> {
-    info!("starting iterative auth check");
+    debug!("starting iterative auth check");
 
     debug!("performing auth checks on {events_to_check:?}");
 

@@ -17,7 +17,7 @@ use serde::{
     Deserialize,
 };
 use serde_json::{from_str as from_json_str, value::RawValue as RawJsonValue};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, warn};
 
 use crate::{
     power_levels::{
@@ -127,7 +127,7 @@ pub fn auth_check<E: Event>(
     current_third_party_invite: Option<impl Event>,
     fetch_state: impl Fn(&StateEventType, &str) -> Option<E>,
 ) -> Result<bool> {
-    info!(
+    debug!(
         "auth_check beginning for {} ({})",
         incoming_event.event_id(),
         incoming_event.event_type()
@@ -153,7 +153,7 @@ pub fn auth_check<E: Event>(
             creator: Option<Raw<IgnoredAny>>,
         }
 
-        info!("start m.room.create check");
+        debug!("start m.room.create check");
 
         // If it has any previous events, reject
         if incoming_event.prev_events().next().is_some() {
@@ -187,7 +187,7 @@ pub fn auth_check<E: Event>(
             }
         }
 
-        info!("m.room.create event was allowed");
+        debug!("m.room.create event was allowed");
         return Ok(true);
     }
 
@@ -251,7 +251,7 @@ pub fn auth_check<E: Event>(
     if room_version.special_case_aliases_auth {
         // 4. If type is m.room.aliases
         if *incoming_event.event_type() == TimelineEventType::RoomAliases {
-            info!("starting m.room.aliases check");
+            debug!("starting m.room.aliases check");
 
             // If sender's domain doesn't matches state_key, reject
             if incoming_event.state_key() != Some(sender.server_name().as_str()) {
@@ -259,7 +259,7 @@ pub fn auth_check<E: Event>(
                 return Ok(false);
             }
 
-            info!("m.room.aliases event was allowed");
+            debug!("m.room.aliases event was allowed");
             return Ok(true);
         }
     }
@@ -269,7 +269,7 @@ pub fn auth_check<E: Event>(
     let sender_member_event = fetch_state(&StateEventType::RoomMember, sender.as_str());
 
     if *incoming_event.event_type() == TimelineEventType::RoomMember {
-        info!("starting m.room.member check");
+        debug!("starting m.room.member check");
         let state_key = match incoming_event.state_key() {
             None => {
                 warn!("no statekey in member event");
@@ -314,7 +314,7 @@ pub fn auth_check<E: Event>(
             return Ok(false);
         }
 
-        info!("m.room.member event was allowed");
+        debug!("m.room.member event was allowed");
         return Ok(true);
     }
 
@@ -380,7 +380,7 @@ pub fn auth_check<E: Event>(
             return Ok(false);
         }
 
-        info!("m.room.third_party_invite event was allowed");
+        debug!("m.room.third_party_invite event was allowed");
         return Ok(true);
     }
 
@@ -393,7 +393,7 @@ pub fn auth_check<E: Event>(
 
     // If type is m.room.power_levels
     if *incoming_event.event_type() == TimelineEventType::RoomPowerLevels {
-        info!("starting m.room.power_levels check");
+        debug!("starting m.room.power_levels check");
 
         if let Some(required_pwr_lvl) = check_power_levels(
             room_version,
@@ -409,7 +409,7 @@ pub fn auth_check<E: Event>(
             warn!("power level was not allowed");
             return Ok(false);
         }
-        info!("power levels event allowed");
+        debug!("power levels event allowed");
     }
 
     // Room version 3: Redaction events are always accepted (provided the event is allowed by
@@ -434,7 +434,7 @@ pub fn auth_check<E: Event>(
         }
     }
 
-    info!("allowing event passed all checks");
+    debug!("allowing event passed all checks");
     Ok(true)
 }
 
@@ -780,7 +780,7 @@ fn check_power_levels(
         deserialize_power_levels(power_event.content().get(), room_version)?;
 
     // Validation of users is done in Ruma, synapse for loops validating user_ids and integers here
-    info!("validation of power event finished");
+    debug!("validation of power event finished");
 
     let current_state = match previous_power_event {
         Some(current_state) => current_state,
@@ -912,7 +912,7 @@ fn check_redaction(
     redact_level: Int,
 ) -> Result<bool> {
     if user_level >= redact_level {
-        info!("redaction allowed via power levels");
+        debug!("redaction allowed via power levels");
         return Ok(true);
     }
 
@@ -921,7 +921,7 @@ fn check_redaction(
     if redaction_event.event_id().borrow().server_name()
         == redaction_event.redacts().as_ref().and_then(|&id| id.borrow().server_name())
     {
-        info!("redaction event allowed via room version 1 rules");
+        debug!("redaction event allowed via room version 1 rules");
         return Ok(true);
     }
 
