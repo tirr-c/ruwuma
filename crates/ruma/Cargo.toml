@@ -231,6 +231,7 @@ unstable-msc2448 = [
 ]
 unstable-msc2654 = ["ruma-client-api?/unstable-msc2654"]
 unstable-msc2666 = ["ruma-client-api?/unstable-msc2666"]
+unstable-msc2705 = ["ruma-client-api?/unstable-msc2705"]
 unstable-msc2747 = ["ruma-events?/unstable-msc2747"]
 unstable-msc2867 = ["ruma-events?/unstable-msc2867"]
 unstable-msc2870 = ["ruma-common/unstable-msc2870"]
@@ -246,6 +247,7 @@ unstable-msc3245 = ["ruma-events?/unstable-msc3245"]
 unstable-msc3245-v1-compat = ["ruma-events?/unstable-msc3245-v1-compat"]
 unstable-msc3246 = ["ruma-events?/unstable-msc3246"]
 unstable-msc3266 = ["ruma-client-api?/unstable-msc3266"]
+unstable-msc3291 = ["ruma-events?/unstable-msc3291"]
 unstable-msc3381 = ["ruma-events?/unstable-msc3381"]
 unstable-msc3401 = ["ruma-events?/unstable-msc3401"]
 unstable-msc3488 = [
@@ -289,6 +291,7 @@ __ci = [
     "unstable-msc2448",
     "unstable-msc2654",
     "unstable-msc2666",
+    "unstable-msc2705",
     "unstable-msc2747",
     "unstable-msc2867",
     "unstable-msc2870",
@@ -300,6 +303,7 @@ __ci = [
     "unstable-msc3245-v1-compat",
     "unstable-msc3246",
     "unstable-msc3266",
+    "unstable-msc3291",
     "unstable-msc3381",
     "unstable-msc3401",
     "unstable-msc3488",
