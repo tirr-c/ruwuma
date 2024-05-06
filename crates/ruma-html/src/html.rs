@@ -10,6 +10,9 @@ use html5ever::{
 };
 use tracing::debug;
 
+#[cfg(feature = "matrix")]
+pub mod matrix;
+
 use crate::SanitizerConfig;
 
 /// An HTML fragment.
@@ -44,11 +47,11 @@ impl Html {
     /// `SanitizerConfig::compat().remove_reply_fallback()`.
     pub fn sanitize(&mut self) {
         let config = SanitizerConfig::compat().remove_reply_fallback();
-        self.sanitize_with(config);
+        self.sanitize_with(&config);
     }
 
     /// Sanitize this HTML according to the given configuration.
-    pub fn sanitize_with(&mut self, config: SanitizerConfig) {
+    pub fn sanitize_with(&mut self, config: &SanitizerConfig) {
         config.clean(self);
     }
 
@@ -429,6 +432,16 @@ pub struct ElementData {
 
     /// The attributes of the element.
     pub attrs: BTreeSet<Attribute>,
+}
+
+impl ElementData {
+    /// Convert this element data to typed data as [suggested by the Matrix Specification][spec].
+    ///
+    /// [spec]: https://spec.matrix.org/latest/client-server-api/#mroommessage-msgtypes
+    #[cfg(feature = "matrix")]
+    pub fn to_matrix(&self) -> matrix::MatrixElementData {
+        matrix::MatrixElementData::parse(&self.name, &self.attrs)
+    }
 }
 
 /// A reference to an HTML node.
