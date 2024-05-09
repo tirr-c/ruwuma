@@ -58,7 +58,7 @@ impl ReleaseTask {
 
         let config = crate::Config::load()?.github;
 
-        let http_client = Client::new();
+        let http_client = Client::builder().user_agent("ruma xtask").build()?;
 
         Ok(Self { metadata, package, version, http_client, config, dry_run })
     }
@@ -67,7 +67,8 @@ impl ReleaseTask {
     pub(crate) fn run(&mut self) -> Result<()> {
         let title = &self.title();
         let prerelease = !self.version.pre.is_empty();
-        let publish_only = self.package.name == "ruma-identifiers-validation";
+        let publish_only =
+            ["ruma-identifiers-validation", "ruma-macros"].contains(&self.package.name.as_str());
 
         println!(
             "Starting {} for {title}…",
