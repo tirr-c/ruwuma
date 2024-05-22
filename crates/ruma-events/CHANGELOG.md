@@ -1,5 +1,14 @@
 # [unreleased]
 
+# 0.28.1
+
+Improvements:
+
+- Implement `make_for_thread` and `make_replacement` for
+  `RoomMessageEventContentWithoutRelation`
+- `RoomMessageEventContent::set_mentions` is deprecated and replaced by
+  `add_mentions` that should be called before `make_replacement`.
+
 # 0.28.0
 
 Bug fixes:

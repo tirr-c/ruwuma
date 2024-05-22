@@ -7,7 +7,7 @@ homepage = "https://ruma.dev/"
 repository = "https://github.com/ruma/ruma"
 readme = "README.md"
 license = "MIT"
-version = "0.10.0"
+version = "0.10.1"
 edition = "2021"
 rust-version = { workspace = true }
 
@@ -30,22 +30,11 @@ client-hyper = ["client", "ruma-client?/hyper"]
 client-hyper-native-tls = ["client", "ruma-client?/hyper-native-tls"]
 client-reqwest = ["client", "ruma-client?/reqwest"]
 client-reqwest-native-tls = ["client", "ruma-client?/reqwest-native-tls"]
-client-reqwest-native-tls-vendored = [
-    "client",
-    "ruma-client?/reqwest-native-tls-vendored",
-]
-client-reqwest-rustls-manual-roots = [
-    "client",
-    "ruma-client?/reqwest-rustls-manual-roots",
-]
-client-reqwest-rustls-webpki-roots = [
-    "client",
-    "ruma-client?/reqwest-rustls-webpki-roots",
-]
-client-reqwest-rustls-native-roots = [
-    "client",
-    "ruma-client?/reqwest-rustls-native-roots",
-]
+client-reqwest-native-tls-alpn = ["client", "ruma-client?/reqwest-native-tls-alpn"]
+client-reqwest-native-tls-vendored = ["client", "ruma-client?/reqwest-native-tls-vendored"]
+client-reqwest-rustls-manual-roots = ["client", "ruma-client?/reqwest-rustls-manual-roots"]
+client-reqwest-rustls-webpki-roots = ["client", "ruma-client?/reqwest-rustls-webpki-roots"]
+client-reqwest-rustls-native-roots = ["client", "ruma-client?/reqwest-rustls-native-roots"]
 
 appservice-api-c = [
     "api",
@@ -214,6 +203,7 @@ unstable-exhaustive-types = [
     "ruma-federation-api?/unstable-exhaustive-types",
     "ruma-identity-service-api?/unstable-exhaustive-types",
     "ruma-push-gateway-api?/unstable-exhaustive-types",
+    "ruma-signatures?/unstable-exhaustive-types",
     "ruma-state-res?/unstable-exhaustive-types",
     "ruma-events?/unstable-exhaustive-types",
 ]
@@ -274,6 +264,7 @@ unstable-msc3955 = ["ruma-events?/unstable-msc3955"]
 unstable-msc3956 = ["ruma-events?/unstable-msc3956"]
 unstable-msc3983 = ["ruma-client-api?/unstable-msc3983"]
 unstable-msc4075 = ["ruma-events?/unstable-msc4075"]
+unstable-msc4108 = ["ruma-client-api?/unstable-msc4108"]
 unstable-msc4121 = ["ruma-client-api?/unstable-msc4121"]
 unstable-msc4125 = ["ruma-federation-api?/unstable-msc4125"]
 unstable-pdu = ["ruma-events?/unstable-pdu"]
@@ -327,6 +318,7 @@ __ci = [
     "unstable-msc3956",
     "unstable-msc3983",
     "unstable-msc4075",
+    "unstable-msc4108",
     "unstable-msc4121",
     "unstable-msc4125",
 ]
