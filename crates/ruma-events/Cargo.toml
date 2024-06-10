@@ -12,7 +12,6 @@ rust-version = { workspace = true }
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 canonical-json = ["ruma-common/canonical-json"]
@@ -55,6 +54,10 @@ compat-optional = []
 
 # Allow TagInfo to contain a stringified floating-point value for the `order` field.
 compat-tag-info = []
+
+# Support encrypted stickers, as sent by several bridges.
+# https://github.com/matrix-org/matrix-spec/issues/1667
+compat-encrypted-stickers = []
 
 [dependencies]
 as_variant = { workspace = true }

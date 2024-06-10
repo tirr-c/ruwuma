@@ -12,7 +12,7 @@ use ruma_common::{
     api::{request, response, Metadata},
     metadata,
     serde::{deserialize_cow_str, duration::opt_ms, Raw},
-    DeviceKeyAlgorithm, MilliSecondsSinceUnixEpoch, OwnedMxcUri, OwnedRoomId, RoomId,
+    DeviceKeyAlgorithm, MilliSecondsSinceUnixEpoch, OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId,
 };
 use ruma_events::{
     receipt::SyncReceiptEvent, typing::SyncTypingEvent, AnyGlobalAccountDataEvent,
@@ -294,9 +294,16 @@ pub struct SyncRequestList {
     #[serde(flatten)]
     pub room_details: RoomDetailsConfig,
 
-    /// If tombstoned rooms should be returned and if so, with what information attached
+    /// If tombstoned rooms should be returned and if so, with what information attached.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub include_old_rooms: Option<IncludeOldRooms>,
+
+    /// Request a stripped variant of membership events for the users used to calculate the room
+    /// name.
+    ///
+    /// Sticky.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_heroes: Option<bool>,
 
     /// Filters to apply to the list before sorting. Sticky.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -362,6 +369,10 @@ pub struct RoomSubscription {
     /// The maximum number of timeline events to return per room. Sticky.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeline_limit: Option<UInt>,
+
+    /// Include the room heroes. Sticky.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_heroes: Option<bool>,
 }
 
 /// Operation applied to the specific SlidingSyncList
@@ -479,12 +490,39 @@ pub struct SlidingSyncRoom {
     /// relying on the latest event.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timestamp: Option<MilliSecondsSinceUnixEpoch>,
+
+    /// Heroes of the room, if requested by a room subscription.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heroes: Option<Vec<SlidingSyncRoomHero>>,
 }
 
 impl SlidingSyncRoom {
     /// Creates an empty `Room`.
     pub fn new() -> Self {
         Default::default()
+    }
+}
+
+/// A sliding sync room hero.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[cfg_attr(not(feature = "unstable-exhaustive-types"), non_exhaustive)]
+pub struct SlidingSyncRoomHero {
+    /// The user ID of the hero.
+    pub user_id: OwnedUserId,
+
+    /// The name of the hero.
+    #[serde(rename = "displayname", skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    /// The avatar of the hero.
+    #[serde(rename = "avatar_url", skip_serializing_if = "Option::is_none")]
+    pub avatar: Option<OwnedMxcUri>,
+}
+
+impl SlidingSyncRoomHero {
+    /// Creates a new `SlidingSyncRoomHero` with the given user id.
+    pub fn new(user_id: OwnedUserId) -> Self {
+        Self { user_id, name: None, avatar: None }
     }
 }
 

@@ -13,7 +13,6 @@ rust-version = { workspace = true }
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 api = ["ruma-common/api"]
@@ -191,6 +190,10 @@ compat-signature-id = ["ruma-signatures?/compat-signature-id"]
 # Allow TagInfo to contain a stringified floating-point value for the `order` field.
 compat-tag-info = ["ruma-events?/compat-tag-info"]
 
+# Support encrypted stickers, as sent by several bridges.
+# https://github.com/matrix-org/matrix-spec/issues/1667
+compat-encrypted-stickers = ["ruma-events?/compat-encrypted-stickers"]
+
 # Specific compatibility for past ring public/private key documents.
 ring-compat = ["dep:ruma-signatures", "ruma-signatures?/ring-compat"]
 
@@ -255,6 +258,7 @@ unstable-msc3618 = ["ruma-federation-api?/unstable-msc3618"]
 unstable-msc3723 = ["ruma-federation-api?/unstable-msc3723"]
 unstable-msc3814 = ["ruma-client-api?/unstable-msc3814"]
 unstable-msc3843 = ["ruma-client-api?/unstable-msc3843", "ruma-federation-api?/unstable-msc3843"]
+unstable-msc3916 = ["ruma-client-api?/unstable-msc3916"]
 unstable-msc3927 = ["ruma-events?/unstable-msc3927"]
 unstable-msc3930 = ["ruma-common/unstable-msc3930"]
 unstable-msc3931 = ["ruma-common/unstable-msc3931"]
@@ -309,6 +313,7 @@ __ci = [
     "unstable-msc3723",
     "unstable-msc3814",
     "unstable-msc3843",
+    "unstable-msc3916",
     "unstable-msc3927",
     "unstable-msc3930",
     "unstable-msc3931",
