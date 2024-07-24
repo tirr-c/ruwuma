@@ -68,7 +68,7 @@ impl ReleaseTask {
         let title = &self.title();
         let prerelease = !self.version.pre.is_empty();
         let publish_only =
-            ["ruma-identifiers-validation", "ruma-macros"].contains(&self.package.name.as_str());
+            ["ruma-macros"].contains(&self.package.name.as_str());
 
         println!(
             "Starting {} for {title}…",
