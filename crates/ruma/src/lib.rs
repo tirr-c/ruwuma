@@ -86,6 +86,9 @@ pub use ruma_events as events;
 #[cfg(feature = "html")]
 #[doc(inline)]
 pub use ruma_html as html;
+#[cfg(feature = "identifiers-validation")]
+#[doc(inline)]
+pub use ruma_identifiers_validation as identifiers_validation;
 #[cfg(feature = "server-util")]
 #[doc(inline)]
 pub use ruma_server_util as server_util;
@@ -95,9 +98,6 @@ pub use ruma_signatures as signatures;
 #[cfg(feature = "state-res")]
 #[doc(inline)]
 pub use ruma_state_res as state_res;
-#[cfg(feature = "identifiers-validation")]
-#[doc(inline)]
-pub use ruma_identifiers_validation as identifiers_validation;
 
 /// (De)serializable types for various [Matrix APIs][apis] requests and responses and abstractions
 /// for them.
@@ -129,7 +129,9 @@ pub mod api {
 #[doc(no_inline)]
 pub use assign::assign;
 #[doc(no_inline)]
-pub use js_int::{int, uint, Int, UInt};
+pub use js_int::{
+    int, uint, Int, ParseIntError as JsParseIntError, TryFromIntError as JsTryFromIntError, UInt,
+};
 #[doc(no_inline)]
 pub use js_option::JsOption;
 #[cfg(feature = "client-ext-client-api")]
