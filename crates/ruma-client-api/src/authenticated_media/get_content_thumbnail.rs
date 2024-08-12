@@ -7,7 +7,7 @@ pub mod v1 {
     //!
     //! [spec]: https://spec.matrix.org/latest/client-server-api/#get_matrixclientv1mediathumbnailservernamemediaid
 
-    use std::time::Duration;
+    use std::{borrow::Cow, time::Duration};
 
     use http::header::CONTENT_TYPE;
     use js_int::UInt;
@@ -87,7 +87,7 @@ pub mod v1 {
 
         /// The content type of the thumbnail.
         #[ruma_api(header = CONTENT_TYPE)]
-        pub content_type: Option<String>,
+        pub content_type: Option<Cow<'static, str>>,
     }
 
     impl Request {
