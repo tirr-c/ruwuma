@@ -7,16 +7,18 @@ pub mod v1 {
     //!
     //! [spec]: https://spec.matrix.org/latest/client-server-api/#get_matrixclientv1mediathumbnailservernamemediaid
 
-    use std::time::Duration;
+    use std::{borrow::Cow, time::Duration};
 
-    use http::header::CONTENT_TYPE;
+    use http::header::{CACHE_CONTROL, CONTENT_TYPE};
     use js_int::UInt;
     use ruma_common::{
         api::{request, response, Metadata},
         metadata, IdParseError, MxcUri, OwnedServerName,
     };
 
-    use crate::media::get_content_thumbnail::v3::Method;
+    use crate::{
+        http_headers::CROSS_ORIGIN_RESOURCE_POLICY, media::get_content_thumbnail::v3::Method,
+    };
 
     const METADATA: Metadata = metadata! {
         method: GET,
@@ -87,7 +89,23 @@ pub mod v1 {
 
         /// The content type of the thumbnail.
         #[ruma_api(header = CONTENT_TYPE)]
-        pub content_type: Option<String>,
+        pub content_type: Option<Cow<'static, str>>,
+
+        /// The value of the `Cross-Origin-Resource-Policy` HTTP header.
+        ///
+        /// See [MDN] for the syntax.
+        ///
+        /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Resource-Policy#syntax
+        #[ruma_api(header = CROSS_ORIGIN_RESOURCE_POLICY)]
+        pub cross_origin_resource_policy: Option<Cow<'static, str>>,
+
+        /// The value of the `Cache-Control` HTTP header.
+        ///
+        /// See [MDN] for the syntax.
+        ///
+        /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#syntax
+        #[ruma_api(header = CACHE_CONTROL)]
+        pub cache_control: Option<Cow<'static, str>>,
     }
 
     impl Request {
@@ -122,7 +140,12 @@ pub mod v1 {
     impl Response {
         /// Creates a new `Response` with the given thumbnail.
         pub fn new(file: Vec<u8>) -> Self {
-            Self { file, content_type: None }
+            Self {
+                file,
+                content_type: None,
+                cross_origin_resource_policy: None,
+                cache_control: None,
+            }
         }
     }
 }
