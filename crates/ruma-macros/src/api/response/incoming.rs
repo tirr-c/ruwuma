@@ -60,9 +60,8 @@ impl Response {
                                     #( #cfg_attrs )*
                                     #field_name: {
                                         headers.remove(#header_name)
-                                            .map(|h| h.to_str().map(str::to_owned))
+                                            .map(|h| h.to_str().map(|s| s.to_owned()))
                                             .transpose()?
-                                            .map(Into::into)
                                     }
                                 }
                             }
@@ -72,7 +71,7 @@ impl Response {
                                     headers.remove(#header_name)
                                         .expect("response missing expected header")
                                         .to_str()?
-                                        .into()
+                                        .to_owned()
                                 }
                             },
                         };
