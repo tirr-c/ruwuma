@@ -7,7 +7,7 @@ pub mod v3 {
     //!
     //! [spec]: https://spec.matrix.org/latest/client-server-api/#get_matrixmediav3downloadservernamemediaid
 
-    use std::{borrow::Cow, time::Duration};
+    use std::time::Duration;
 
     use http::header::{CACHE_CONTROL, CONTENT_DISPOSITION, CONTENT_TYPE};
     use ruma_common::{
@@ -83,7 +83,7 @@ pub mod v3 {
 
         /// The content type of the file that was previously uploaded.
         #[ruma_api(header = CONTENT_TYPE)]
-        pub content_type: Option<Cow<'static, str>>,
+        pub content_type: Option<String>,
 
         /// The value of the `Content-Disposition` HTTP header, possibly containing the name of the
         /// file that was previously uploaded.
@@ -92,7 +92,7 @@ pub mod v3 {
         ///
         /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition#Syntax
         #[ruma_api(header = CONTENT_DISPOSITION)]
-        pub content_disposition: Option<Cow<'static, str>>,
+        pub content_disposition: Option<String>,
 
         /// The value of the `Cross-Origin-Resource-Policy` HTTP header.
         ///
@@ -100,7 +100,7 @@ pub mod v3 {
         ///
         /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Resource-Policy#syntax
         #[ruma_api(header = CROSS_ORIGIN_RESOURCE_POLICY)]
-        pub cross_origin_resource_policy: Option<Cow<'static, str>>,
+        pub cross_origin_resource_policy: Option<String>,
 
         /// The value of the `Cache-Control` HTTP header.
         ///
@@ -108,7 +108,7 @@ pub mod v3 {
         ///
         /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#syntax
         #[ruma_api(header = CACHE_CONTROL)]
-        pub cache_control: Option<Cow<'static, str>>,
+        pub cache_control: Option<String>,
     }
 
     #[allow(deprecated)]
@@ -141,7 +141,7 @@ pub mod v3 {
                 file,
                 content_type: None,
                 content_disposition: None,
-                cross_origin_resource_policy: Some("cross-origin".into()),
+                cross_origin_resource_policy: Some("cross-origin".to_owned()),
                 cache_control: None,
             }
         }

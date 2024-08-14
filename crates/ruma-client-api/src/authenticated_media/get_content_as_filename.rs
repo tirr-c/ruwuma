@@ -7,7 +7,7 @@ pub mod v1 {
     //!
     //! [spec]: https://spec.matrix.org/latest/client-server-api/#get_matrixclientv1mediadownloadservernamemediaidfilename
 
-    use std::{borrow::Cow, time::Duration};
+    use std::time::Duration;
 
     use http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
     use ruma_common::{
@@ -62,7 +62,7 @@ pub mod v1 {
 
         /// The content type of the file that was previously uploaded.
         #[ruma_api(header = CONTENT_TYPE)]
-        pub content_type: Option<Cow<'static, str>>,
+        pub content_type: Option<String>,
 
         /// The value of the `Content-Disposition` HTTP header, possibly containing the name of the
         /// file that was previously uploaded.
@@ -71,7 +71,7 @@ pub mod v1 {
         ///
         /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition#Syntax
         #[ruma_api(header = CONTENT_DISPOSITION)]
-        pub content_disposition: Option<Cow<'static, str>>,
+        pub content_disposition: Option<String>,
     }
 
     impl Request {

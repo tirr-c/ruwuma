@@ -19,16 +19,10 @@ impl Response {
                         if segments.last().unwrap().ident == "Option" =>
                     {
                         quote! {
-                            if let Some(ref header) = self.#field_name {
-                                let header = match header {
-                                    ::std::borrow::Cow::Borrowed(ref header) =>
-                                        #http::header::HeaderValue::from_static(header),
-                                    ::std::borrow::Cow::Owned(ref header) =>
-                                        #http::header::HeaderValue::from_str(&header)?,
-                                };
+                            if let Some(header) = self.#field_name {
                                 headers.insert(
                                     #header_name,
-                                    header,
+                                    header.parse()?,
                                 );
                             }
                         }
