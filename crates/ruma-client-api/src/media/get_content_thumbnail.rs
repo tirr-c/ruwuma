@@ -14,6 +14,7 @@ pub mod v3 {
     pub use ruma_common::media::Method;
     use ruma_common::{
         api::{request, response, Metadata},
+        http_headers::ContentDisposition,
         metadata, IdParseError, MxcUri, OwnedServerName,
     };
 
@@ -136,7 +137,7 @@ pub mod v3 {
         ///
         /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition#Syntax
         #[ruma_api(header = CONTENT_DISPOSITION)]
-        pub content_disposition: Option<String>,
+        pub content_disposition: Option<ContentDisposition>,
     }
 
     #[allow(deprecated)]
