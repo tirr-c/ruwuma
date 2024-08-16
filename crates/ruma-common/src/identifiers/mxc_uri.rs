@@ -84,6 +84,16 @@ impl<'a> TryFrom<&'a str> for Mxc<'a> {
     type Error = MxcUriError;
 
     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
+        let s: &MxcUri = s.into();
+        s.try_into()
+    }
+}
+
+impl<'a> TryFrom<&'a OwnedMxcUri> for Mxc<'a> {
+    type Error = MxcUriError;
+
+    fn try_from(s: &'a OwnedMxcUri) -> Result<Self, Self::Error> {
+        let s: &MxcUri = s.as_ref();
         s.try_into()
     }
 }
