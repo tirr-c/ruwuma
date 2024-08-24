@@ -12,7 +12,7 @@ use ruma_common::{
     api::{request, response, Metadata},
     metadata,
     serde::{deserialize_cow_str, duration::opt_ms, Raw},
-    DeviceKeyAlgorithm, MilliSecondsSinceUnixEpoch, OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId,
+    DeviceKeyAlgorithm, MilliSecondsSinceUnixEpoch, OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId, room::RoomType
 };
 use ruma_events::{
     receipt::SyncReceiptEvent, typing::SyncTypingEvent, AnyGlobalAccountDataEvent,
@@ -230,14 +230,14 @@ pub struct SyncRequestListFilters {
     /// returned regardless of type. This can be used to get the initial set of spaces for an
     /// account.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub room_types: Vec<String>,
+    pub room_types: Vec<Option<RoomType>>,
 
     /// Only list rooms that are not of these create-types, or all.
     ///
     /// Same as "room_types" but inverted. This can be used to filter out spaces from the room
     /// list.
     #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
-    pub not_room_types: Vec<String>,
+    pub not_room_types: Vec<Option<RoomType>>,
 
     /// Only list rooms matching the given string, or all.
     ///
