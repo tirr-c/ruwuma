@@ -317,30 +317,32 @@ impl VersionHistory {
                 self.removed.expect("VersioningDecision::Removed implies metadata.removed"),
             )),
             VersioningDecision::Stable { any_deprecated, all_deprecated, any_removed } => {
-                if any_removed {
-                    if all_deprecated {
-                        warn!(
-                            "endpoint is removed in some (and deprecated in ALL) \
+                if cfg!(debug_assertions) {
+                    if any_removed {
+                        if all_deprecated {
+                            warn!(
+                                "endpoint is removed in some (and deprecated in ALL) \
                              of the following versions: {versions:?}",
+                            );
+                        } else if any_deprecated {
+                            warn!(
+                                "endpoint is removed (and deprecated) in some of the \
+                             following versions: {versions:?}",
+                            );
+                        } else {
+                            unreachable!("any_removed implies *_deprecated");
+                        }
+                    } else if all_deprecated {
+                        warn!(
+                            "endpoint is deprecated in ALL of the following versions: \
+                          {versions:?}",
                         );
                     } else if any_deprecated {
                         warn!(
-                            "endpoint is removed (and deprecated) in some of the \
-                             following versions: {versions:?}",
+                            "endpoint is deprecated in some of the following versions: \
+                         {versions:?}",
                         );
-                    } else {
-                        unreachable!("any_removed implies *_deprecated");
                     }
-                } else if all_deprecated {
-                    warn!(
-                        "endpoint is deprecated in ALL of the following versions: \
-                         {versions:?}",
-                    );
-                } else if any_deprecated {
-                    warn!(
-                        "endpoint is deprecated in some of the following versions: \
-                         {versions:?}",
-                    );
                 }
 
                 Ok(self
