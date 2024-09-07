@@ -10,6 +10,7 @@ use js_int::UInt;
 use js_option::JsOption;
 use ruma_common::{
     api::{request, response, Metadata},
+    directory::RoomTypeFilter,
     metadata,
     serde::{deserialize_cow_str, duration::opt_ms, Raw},
     DeviceKeyAlgorithm, MilliSecondsSinceUnixEpoch, OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId, room::RoomType
