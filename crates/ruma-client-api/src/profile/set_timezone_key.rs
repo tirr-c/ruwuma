@@ -42,10 +42,7 @@ pub mod unstable {
     impl Request {
         /// Creates a new `Request` with the given user ID and timezone.
         pub fn new(user_id: OwnedUserId, tz: Option<String>) -> Self {
-            Self {
-                user_id,
-                tz,
-            }
+            Self { user_id, tz }
         }
     }
 

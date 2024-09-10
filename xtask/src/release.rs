@@ -67,8 +67,7 @@ impl ReleaseTask {
     pub(crate) fn run(&mut self) -> Result<()> {
         let title = &self.title();
         let prerelease = !self.version.pre.is_empty();
-        let publish_only =
-            ["ruma-macros"].contains(&self.package.name.as_str());
+        let publish_only = ["ruma-macros"].contains(&self.package.name.as_str());
 
         println!(
             "Starting {} for {title}…",

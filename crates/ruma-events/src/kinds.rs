@@ -10,8 +10,6 @@ use ruma_macros::Event;
 use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize};
 use serde_json::value::RawValue as RawJsonValue;
 
-use crate::{AnyGlobalAccountDataEvent, AnyRoomAccountDataEvent};
-
 use super::{
     AnyInitialStateEvent, EmptyStateKey, EphemeralRoomEventContent, EventContent,
     EventContentFromType, GlobalAccountDataEventContent, MessageLikeEventContent,
@@ -20,6 +18,7 @@ use super::{
     RedactionDeHelper, RoomAccountDataEventContent, StateEventType, StaticStateEventContent,
     ToDeviceEventContent,
 };
+use crate::{AnyGlobalAccountDataEvent, AnyRoomAccountDataEvent};
 
 /// Enum allowing to use the same structures for global and room account data
 #[derive(Debug)]
