@@ -26,11 +26,11 @@ pub enum Error {
 
     /// A custom error.
     #[error("{0}")]
-    Custom(Box<dyn std::error::Error>),
+    Custom(Box<dyn std::error::Error + Send>),
 }
 
 impl Error {
-    pub fn custom<E: std::error::Error + 'static>(e: E) -> Self {
+    pub fn custom<E: std::error::Error + Send + 'static>(e: E) -> Self {
         Self::Custom(Box::new(e))
     }
 }
