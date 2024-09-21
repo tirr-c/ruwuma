@@ -11,7 +11,7 @@ use serde_json::value::RawValue as RawJsonValue;
 
 /// Abstraction of a PDU so users can have their own PDU types.
 pub trait Event {
-    type Id: Clone + Debug + Display + Eq + Ord + Hash + Borrow<EventId>;
+    type Id: Clone + Debug + Display + Eq + Ord + Hash + Send + Borrow<EventId>;
 
     /// The `EventId` of this event.
     fn event_id(&self) -> &Self::Id;
@@ -36,11 +36,11 @@ pub trait Event {
 
     /// The events before this event.
     // Requires GATs to avoid boxing (and TAIT for making it convenient).
-    fn prev_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + '_>;
+    fn prev_events(&self) -> impl DoubleEndedIterator<Item = &Self::Id> + Send + '_;
 
     /// All the authenticating events for this event.
     // Requires GATs to avoid boxing (and TAIT for making it convenient).
-    fn auth_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + '_>;
+    fn auth_events(&self) -> impl DoubleEndedIterator<Item = &Self::Id> + Send + '_;
 
     /// If this event is a redaction event this is the event it redacts.
     fn redacts(&self) -> Option<&Self::Id>;
@@ -77,11 +77,11 @@ impl<T: Event> Event for &T {
         (*self).state_key()
     }
 
-    fn prev_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + '_> {
+    fn prev_events(&self) -> impl DoubleEndedIterator<Item = &Self::Id> + Send + '_ {
         (*self).prev_events()
     }
 
-    fn auth_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + '_> {
+    fn auth_events(&self) -> impl DoubleEndedIterator<Item = &Self::Id> + Send + '_ {
         (*self).auth_events()
     }
 
@@ -121,11 +121,11 @@ impl<T: Event> Event for Arc<T> {
         (**self).state_key()
     }
 
-    fn prev_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + '_> {
+    fn prev_events(&self) -> impl DoubleEndedIterator<Item = &Self::Id> + Send + '_ {
         (**self).prev_events()
     }
 
-    fn auth_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + '_> {
+    fn auth_events(&self) -> impl DoubleEndedIterator<Item = &Self::Id> + Send + '_ {
         (**self).auth_events()
     }
 
