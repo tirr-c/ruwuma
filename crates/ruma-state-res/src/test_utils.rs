@@ -7,6 +7,7 @@ use std::{
     },
 };
 
+use futures_util::future::ready;
 use js_int::{int, uint};
 use ruma_common::{
     event_id, room_id, user_id, EventId, MilliSecondsSinceUnixEpoch, OwnedEventId, RoomId,
@@ -31,7 +32,7 @@ use crate::{auth_types_for_event, Error, Event, EventTypeExt, Result, StateMap};
 
 static SERVER_TIMESTAMP: AtomicU64 = AtomicU64::new(0);
 
-pub(crate) fn do_check(
+pub(crate) async fn do_check(
     events: &[Arc<PduEvent>],
     edges: Vec<Vec<OwnedEventId>>,
     expected_state_ids: Vec<OwnedEventId>,
@@ -81,9 +82,10 @@ pub(crate) fn do_check(
 
     // Resolve the current state and add it to the state_at_event map then continue
     // on in "time"
-    for node in crate::lexicographical_topological_sort(&graph, |_id| {
+    for node in crate::lexicographical_topological_sort(&graph, &|_id| async {
         Ok((int!(0), MilliSecondsSinceUnixEpoch(uint!(0))))
     })
+    .await
     .unwrap()
     {
         let fake_event = fake_event_map.get(&node).unwrap();
@@ -117,9 +119,13 @@ pub(crate) fn do_check(
                 })
                 .collect();
 
-            let resolved = crate::resolve(&RoomVersionId::V6, state_sets, auth_chain_sets, |id| {
-                event_map.get(id).cloned()
-            });
+            let event_map = &event_map;
+            let fetch = |id: <PduEvent as Event>::Id| ready(event_map.get(&id).cloned());
+            let exists = |id: <PduEvent as Event>::Id| ready(event_map.get(&id).is_some());
+            let resolved =
+                crate::resolve(&RoomVersionId::V6, state_sets, &auth_chain_sets, &fetch, &exists)
+                    .await;
+
             match resolved {
                 Ok(state) => state,
                 Err(e) => panic!("resolution for {node} failed: {e}"),
@@ -614,7 +620,7 @@ pub(crate) mod event {
             }
         }
 
-        fn prev_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + '_> {
+        fn prev_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + Send + '_> {
             match &self.rest {
                 Pdu::RoomV1Pdu(ev) => Box::new(ev.prev_events.iter().map(|(id, _)| id)),
                 Pdu::RoomV3Pdu(ev) => Box::new(ev.prev_events.iter()),
@@ -623,7 +629,7 @@ pub(crate) mod event {
             }
         }
 
-        fn auth_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + '_> {
+        fn auth_events(&self) -> Box<dyn DoubleEndedIterator<Item = &Self::Id> + Send + '_> {
             match &self.rest {
                 Pdu::RoomV1Pdu(ev) => Box::new(ev.auth_events.iter().map(|(id, _)| id)),
                 Pdu::RoomV3Pdu(ev) => Box::new(ev.auth_events.iter()),

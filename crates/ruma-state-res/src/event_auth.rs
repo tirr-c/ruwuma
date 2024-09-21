@@ -1,5 +1,6 @@
 use std::{borrow::Borrow, collections::BTreeSet};
 
+use futures_util::Future;
 use js_int::{int, Int};
 use ruma_common::{
     serde::{Base64, Raw},
@@ -121,12 +122,18 @@ pub fn auth_types_for_event(
 ///
 /// The `fetch_state` closure should gather state from a state snapshot. We need to know if the
 /// event passes auth against some state not a recursive collection of auth_events fields.
-pub fn auth_check<E: Event>(
+pub async fn auth_check<F, Fut, Fetched, Incoming>(
     room_version: &RoomVersion,
-    incoming_event: impl Event,
-    current_third_party_invite: Option<impl Event>,
-    fetch_state: impl Fn(&StateEventType, &str) -> Option<E>,
-) -> Result<bool> {
+    incoming_event: &Incoming,
+    current_third_party_invite: Option<&Incoming>,
+    fetch_state: F,
+) -> Result<bool>
+where
+    F: Fn(&'static StateEventType, &str) -> Fut,
+    Fut: Future<Output = Option<Fetched>> + Send,
+    Fetched: Event + Send,
+    Incoming: Event + Send,
+{
     debug!(
         "auth_check beginning for {} ({})",
         incoming_event.event_id(),
@@ -216,7 +223,7 @@ pub fn auth_check<E: Event>(
     }
     */
 
-    let room_create_event = match fetch_state(&StateEventType::RoomCreate, "") {
+    let room_create_event = match fetch_state(&StateEventType::RoomCreate, "").await {
         None => {
             warn!("no m.room.create event in auth chain");
             return Ok(false);
@@ -265,8 +272,8 @@ pub fn auth_check<E: Event>(
     }
 
     // If type is m.room.member
-    let power_levels_event = fetch_state(&StateEventType::RoomPowerLevels, "");
-    let sender_member_event = fetch_state(&StateEventType::RoomMember, sender.as_str());
+    let power_levels_event = fetch_state(&StateEventType::RoomPowerLevels, "").await;
+    let sender_member_event = fetch_state(&StateEventType::RoomMember, sender.as_str()).await;
 
     if *incoming_event.event_type() == TimelineEventType::RoomMember {
         debug!("starting m.room.member check");
@@ -290,9 +297,13 @@ pub fn auth_check<E: Event>(
         let user_for_join_auth =
             content.join_authorised_via_users_server.as_ref().and_then(|u| u.deserialize().ok());
 
-        let user_for_join_auth_membership = user_for_join_auth
-            .as_ref()
-            .and_then(|auth_user| fetch_state(&StateEventType::RoomMember, auth_user.as_str()))
+        let user_for_join_auth_event = if let Some(auth_user) = user_for_join_auth.as_ref() {
+            fetch_state(&StateEventType::RoomMember, auth_user.as_str()).await
+        } else {
+            None
+        };
+
+        let user_for_join_auth_membership = user_for_join_auth_event
             .and_then(|mem| from_json_str::<GetMembership>(mem.content().get()).ok())
             .map(|mem| mem.membership)
             .unwrap_or(MembershipState::Leave);
@@ -300,13 +311,13 @@ pub fn auth_check<E: Event>(
         if !valid_membership_change(
             room_version,
             target_user,
-            fetch_state(&StateEventType::RoomMember, target_user.as_str()).as_ref(),
+            fetch_state(&StateEventType::RoomMember, target_user.as_str()).await.as_ref(),
             sender,
             sender_member_event.as_ref(),
             &incoming_event,
             current_third_party_invite,
             power_levels_event.as_ref(),
-            fetch_state(&StateEventType::RoomJoinRules, "").as_ref(),
+            fetch_state(&StateEventType::RoomJoinRules, "").await.as_ref(),
             user_for_join_auth.as_deref(),
             &user_for_join_auth_membership,
             room_create_event,
