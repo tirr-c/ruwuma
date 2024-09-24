@@ -102,7 +102,7 @@ impl<'a> TryFrom<&'a OwnedMxcUri> for Mxc<'a> {
 mod tests {
     use ruma_identifiers_validation::error::MxcUriError;
 
-    use super::{MxcUri, OwnedMxcUri};
+    use super::{Mxc, MxcUri, OwnedMxcUri};
 
     #[test]
     fn parse_mxc_uri() {
@@ -111,7 +111,10 @@ mod tests {
         assert!(mxc.is_valid());
         assert_eq!(
             mxc.parts(),
-            Ok(("127.0.0.1".try_into().expect("Failed to create ServerName"), "asd32asdfasdsd"))
+            Ok(Mxc {
+                server_name: "127.0.0.1".try_into().expect("Failed to create ServerName"),
+                media_id: "asd32asdfasdsd",
+            })
         );
     }
 
@@ -146,7 +149,10 @@ mod tests {
         assert!(mxc.is_valid());
         assert_eq!(
             mxc.parts(),
-            Ok(("server".try_into().expect("Failed to create ServerName"), "1234id"))
+            Ok(Mxc {
+                server_name: "server".try_into().expect("Failed to create ServerName"),
+                media_id: "1234id"
+            })
         );
     }
 }
