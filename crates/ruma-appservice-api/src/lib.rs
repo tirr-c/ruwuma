@@ -96,6 +96,11 @@ pub struct Registration {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rate_limited: Option<bool>,
 
+    /// Whether the homeserver should send EDUs to the appservice, as per MSC2409
+    #[cfg(feature = "unstable-msc2409")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receive_ephemeral: Option<bool>,
+
     /// The external protocols which the application service provides (e.g. IRC).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub protocols: Option<Vec<String>>,
@@ -135,6 +140,10 @@ pub struct RegistrationInit {
     /// The sender is excluded.
     pub rate_limited: Option<bool>,
 
+    /// Whether the homeserver should send EDUs to the appservice, as per MSC2409
+    #[cfg(feature = "unstable-msc2409")]
+    pub receive_ephemeral: Option<bool>,
+
     /// The external protocols which the application service provides (e.g. IRC).
     pub protocols: Option<Vec<String>>,
 }
@@ -149,8 +158,19 @@ impl From<RegistrationInit> for Registration {
             sender_localpart,
             namespaces,
             rate_limited,
+            receive_ephemeral,
             protocols,
         } = init;
-        Self { id, url, as_token, hs_token, sender_localpart, namespaces, rate_limited, protocols }
+        Self {
+            id,
+            url,
+            as_token,
+            hs_token,
+            sender_localpart,
+            namespaces,
+            rate_limited,
+            receive_ephemeral,
+            protocols,
+        }
     }
 }
