@@ -3,11 +3,11 @@ use std::{borrow::Borrow, collections::BTreeSet};
 use js_int::{int, Int};
 use ruma_common::{
     serde::{Base64, Raw},
-    OwnedUserId, RoomVersionId, UserId,
+    OwnedUserId, RoomId, RoomVersionId, UserId,
 };
 use ruma_events::room::{
     create::RoomCreateEventContent,
-    join_rules::{JoinRule, RoomJoinRulesEventContent},
+    join_rules::{AllowRule, JoinRule, RoomJoinRulesEventContent},
     member::{MembershipState, ThirdPartyInvite},
     power_levels::RoomPowerLevelsEventContent,
     third_party_invite::RoomThirdPartyInviteEventContent,
@@ -269,53 +269,14 @@ pub fn auth_check<E: Event>(
     let sender_member_event = fetch_state(&StateEventType::RoomMember, sender.as_str());
 
     if *incoming_event.event_type() == TimelineEventType::RoomMember {
-        debug!("starting m.room.member check");
-        let state_key = match incoming_event.state_key() {
-            None => {
-                warn!("no statekey in member event");
-                return Ok(false);
-            }
-            Some(s) => s,
-        };
-
-        let content: RoomMemberContentFields = from_json_str(incoming_event.content().get())?;
-        if content.membership.as_ref().and_then(|m| m.deserialize().ok()).is_none() {
-            warn!("no valid membership field found for m.room.member event content");
-            return Ok(false);
-        }
-
-        let target_user =
-            <&UserId>::try_from(state_key).map_err(|e| Error::InvalidPdu(format!("{e}")))?;
-
-        let user_for_join_auth =
-            content.join_authorised_via_users_server.as_ref().and_then(|u| u.deserialize().ok());
-
-        let user_for_join_auth_membership = user_for_join_auth
-            .as_ref()
-            .and_then(|auth_user| fetch_state(&StateEventType::RoomMember, auth_user.as_str()))
-            .and_then(|mem| from_json_str::<GetMembership>(mem.content().get()).ok())
-            .map(|mem| mem.membership)
-            .unwrap_or(MembershipState::Leave);
-
-        if !valid_membership_change(
+        return auth_check_room_member_inner(
             room_version,
-            target_user,
-            fetch_state(&StateEventType::RoomMember, target_user.as_str()).as_ref(),
-            sender,
-            sender_member_event.as_ref(),
-            &incoming_event,
+            incoming_event,
             current_third_party_invite,
-            power_levels_event.as_ref(),
-            fetch_state(&StateEventType::RoomJoinRules, "").as_ref(),
-            user_for_join_auth.as_deref(),
-            &user_for_join_auth_membership,
             room_create_event,
-        )? {
-            return Ok(false);
-        }
-
-        debug!("m.room.member event was allowed");
-        return Ok(true);
+            fetch_state,
+            |_, _| None,
+        );
     }
 
     // If the sender's current membership state is not join, reject
@@ -438,6 +399,147 @@ pub fn auth_check<E: Event>(
     Ok(true)
 }
 
+pub fn auth_check_room_member<E: Event>(
+    room_version: &RoomVersion,
+    incoming_event: impl Event,
+    current_third_party_invite: Option<impl Event>,
+    fetch_state: impl Fn(&StateEventType, &str) -> Option<E>,
+    fetch_membership_state: impl Fn(&RoomId, &UserId) -> Option<MembershipState>,
+) -> Result<bool> {
+    assert_eq!(*incoming_event.event_type(), TimelineEventType::RoomMember);
+
+    debug!("auth_check_room_member beginning for {}", incoming_event.event_id());
+
+    // [synapse] check that all the events are in the same room as `incoming_event`
+
+    // [synapse] do_sig_check check the event has valid signatures for member events
+
+    let room_create_event = match fetch_state(&StateEventType::RoomCreate, "") {
+        None => {
+            warn!("no m.room.create event in auth chain");
+            return Ok(false);
+        }
+        Some(e) => e,
+    };
+
+    // If event does not have m.room.create in auth_events reject
+    if !incoming_event.auth_events().any(|id| id.borrow() == room_create_event.event_id().borrow())
+    {
+        warn!("no m.room.create event in auth events");
+        return Ok(false);
+    }
+
+    // If the create event content has the field m.federate set to false and the sender domain of
+    // the event does not match the sender domain of the create event, reject.
+    #[derive(Deserialize)]
+    struct RoomCreateContentFederate {
+        #[serde(rename = "m.federate", default = "ruma_common::serde::default_true")]
+        federate: bool,
+    }
+    let room_create_content: RoomCreateContentFederate =
+        from_json_str(room_create_event.content().get())?;
+    if !room_create_content.federate
+        && room_create_event.sender().server_name() != incoming_event.sender().server_name()
+    {
+        warn!("room is not federated and event's sender domain does not match create event's sender domain");
+        return Ok(false);
+    }
+
+    auth_check_room_member_inner(
+        room_version,
+        incoming_event,
+        current_third_party_invite,
+        room_create_event,
+        fetch_state,
+        fetch_membership_state,
+    )
+}
+
+fn auth_check_room_member_inner<E: Event>(
+    room_version: &RoomVersion,
+    incoming_event: impl Event,
+    current_third_party_invite: Option<impl Event>,
+    room_create_event: E,
+    fetch_state: impl Fn(&StateEventType, &str) -> Option<E>,
+    fetch_membership_state: impl Fn(&RoomId, &UserId) -> Option<MembershipState>,
+) -> Result<bool> {
+    let sender = incoming_event.sender();
+    let power_levels_event = fetch_state(&StateEventType::RoomPowerLevels, "");
+    let sender_member_event = fetch_state(&StateEventType::RoomMember, sender.as_str());
+
+    debug!("starting m.room.member check");
+    let state_key = match incoming_event.state_key() {
+        None => {
+            warn!("no statekey in member event");
+            return Ok(false);
+        }
+        Some(s) => s,
+    };
+
+    let content: RoomMemberContentFields = from_json_str(incoming_event.content().get())?;
+    if content.membership.as_ref().and_then(|m| m.deserialize().ok()).is_none() {
+        warn!("no valid membership field found for m.room.member event content");
+        return Ok(false);
+    }
+
+    let target_user =
+        <&UserId>::try_from(state_key).map_err(|e| Error::InvalidPdu(format!("{e}")))?;
+
+    let user_for_join_auth =
+        content.join_authorised_via_users_server.as_ref().and_then(|u| u.deserialize().ok());
+
+    let user_for_join_auth_membership = user_for_join_auth
+        .as_ref()
+        .and_then(|auth_user| fetch_state(&StateEventType::RoomMember, auth_user.as_str()))
+        .and_then(|mem| from_json_str::<GetMembership>(mem.content().get()).ok())
+        .map(|mem| mem.membership)
+        .unwrap_or(MembershipState::Leave);
+
+    let join_rules = fetch_state(&StateEventType::RoomJoinRules, "");
+    let user_allowed_by_restriction = if let Some(jr) = &join_rules {
+        let jr = from_json_str::<RoomJoinRulesEventContent>(jr.content().get())?.join_rule;
+        if let JoinRule::Restricted(rules) | JoinRule::KnockRestricted(rules) = jr {
+            let mut allowed = false;
+            for rule in &rules.allow {
+                if let AllowRule::RoomMembership(room_membership) = rule {
+                    let room_id = &room_membership.room_id;
+                    let state = fetch_membership_state(room_id, target_user);
+                    if state == Some(MembershipState::Join) {
+                        allowed = true;
+                        break;
+                    }
+                }
+            }
+            Some(allowed)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    if !valid_membership_change(
+        room_version,
+        target_user,
+        fetch_state(&StateEventType::RoomMember, target_user.as_str()).as_ref(),
+        user_allowed_by_restriction,
+        sender,
+        sender_member_event.as_ref(),
+        &incoming_event,
+        current_third_party_invite,
+        power_levels_event.as_ref(),
+        join_rules.as_ref(),
+        user_for_join_auth.as_deref(),
+        &user_for_join_auth_membership,
+        room_create_event,
+    )? {
+        return Ok(false);
+    }
+
+    debug!("m.room.member event was allowed");
+    Ok(true)
+}
+
 // TODO deserializing the member, power, join_rules event contents is done in conduit
 // just before this is called. Could they be passed in?
 /// Does the user who sent this member event have required power levels to do so.
@@ -452,6 +554,7 @@ fn valid_membership_change(
     room_version: &RoomVersion,
     target_user: &UserId,
     target_user_membership_event: Option<impl Event>,
+    target_user_allowed_by_restriction: Option<bool>,
     sender: &UserId,
     sender_membership_event: Option<impl Event>,
     current_event: impl Event,
@@ -588,7 +691,8 @@ fn valid_membership_change(
                 if matches!(
                     target_user_current_membership,
                     MembershipState::Invite | MembershipState::Join
-                ) {
+                ) || target_user_allowed_by_restriction.unwrap_or(false)
+                {
                     // If membership state is join or invite, allow.
                     true
                 } else {
@@ -1059,6 +1163,7 @@ mod tests {
             &RoomVersion::V6,
             target_user,
             fetch_state(StateEventType::RoomMember, target_user.to_string()),
+            None,
             sender,
             fetch_state(StateEventType::RoomMember, sender.to_string()),
             &requester,
@@ -1101,6 +1206,7 @@ mod tests {
             &RoomVersion::V6,
             target_user,
             fetch_state(StateEventType::RoomMember, target_user.to_string()),
+            None,
             sender,
             fetch_state(StateEventType::RoomMember, sender.to_string()),
             &requester,
@@ -1143,6 +1249,7 @@ mod tests {
             &RoomVersion::V6,
             target_user,
             fetch_state(StateEventType::RoomMember, target_user.to_string()),
+            None,
             sender,
             fetch_state(StateEventType::RoomMember, sender.to_string()),
             &requester,
@@ -1185,6 +1292,7 @@ mod tests {
             &RoomVersion::V6,
             target_user,
             fetch_state(StateEventType::RoomMember, target_user.to_string()),
+            None,
             sender,
             fetch_state(StateEventType::RoomMember, sender.to_string()),
             &requester,
@@ -1244,6 +1352,7 @@ mod tests {
             &RoomVersion::V9,
             target_user,
             fetch_state(StateEventType::RoomMember, target_user.to_string()),
+            None,
             sender,
             fetch_state(StateEventType::RoomMember, sender.to_string()),
             &requester,
@@ -1260,6 +1369,7 @@ mod tests {
             &RoomVersion::V9,
             target_user,
             fetch_state(StateEventType::RoomMember, target_user.to_string()),
+            None,
             sender,
             fetch_state(StateEventType::RoomMember, sender.to_string()),
             &requester,
@@ -1311,6 +1421,7 @@ mod tests {
             &RoomVersion::V7,
             target_user,
             fetch_state(StateEventType::RoomMember, target_user.to_string()),
+            None,
             sender,
             fetch_state(StateEventType::RoomMember, sender.to_string()),
             &requester,

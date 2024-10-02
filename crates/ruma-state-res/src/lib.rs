@@ -24,7 +24,7 @@ mod state_event;
 mod test_utils;
 
 pub use error::{Error, Result};
-pub use event_auth::{auth_check, auth_types_for_event};
+pub use event_auth::{auth_check, auth_check_room_member, auth_types_for_event};
 use power_levels::PowerLevelsContentFields;
 pub use room_version::RoomVersion;
 pub use state_event::Event;
